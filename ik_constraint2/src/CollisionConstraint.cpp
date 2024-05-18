@@ -70,9 +70,9 @@ namespace ik_constraint2{
       this->jacobian_.resize(0,this->jacobianineq_full_.cols());
       this->jacobianIneq_.resize(0,this->jacobianineq_full_.cols());
     }else{
-      cnoid::Position A_localpos = cnoid::Position::Identity();
+      cnoid::Isometry3 A_localpos = cnoid::Isometry3::Identity();
       A_localpos.translation() = this->A_currentLocalp_;
-      cnoid::Position B_localpos = cnoid::Position::Identity();
+      cnoid::Isometry3 B_localpos = cnoid::Isometry3::Identity();
       B_localpos.translation() = this->B_currentLocalp_;
       ik_constraint2::calc6DofJacobianCoef(this->jacobianineq_full_joints_,//input
                                            this->jacobianineq_full_A_link_,//input

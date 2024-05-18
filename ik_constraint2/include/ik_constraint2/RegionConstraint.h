@@ -15,12 +15,12 @@ namespace ik_constraint2{
 
     const cnoid::LinkPtr& A_link() const { return A_link_;}
     cnoid::LinkPtr& A_link() { return A_link_;}
-    const cnoid::Position& A_localpos() const { return A_localpos_;}
-    cnoid::Position& A_localpos() { return A_localpos_;}
+    const cnoid::Isometry3& A_localpos() const { return A_localpos_;}
+    cnoid::Isometry3& A_localpos() { return A_localpos_;}
     const cnoid::LinkPtr& B_link() const { return B_link_;}
     cnoid::LinkPtr& B_link() { return B_link_;}
-    const cnoid::Position& B_localpos() const { return B_localpos_;}
-    cnoid::Position& B_localpos() { return B_localpos_;}
+    const cnoid::Isometry3& B_localpos() const { return B_localpos_;}
+    cnoid::Isometry3& B_localpos() { return B_localpos_;}
     const double& maxError() const { return maxError_;}
     double& maxError() { return maxError_;}
     const cnoid::Vector3& maxRError() const { return maxRError_;}
@@ -62,9 +62,9 @@ namespace ik_constraint2{
 
   protected:
     cnoid::LinkPtr A_link_ = nullptr;
-    cnoid::Position A_localpos_ = cnoid::Position::Identity();
+    cnoid::Isometry3 A_localpos_ = cnoid::Isometry3::Identity();
     cnoid::LinkPtr B_link_ = nullptr;
-    cnoid::Position B_localpos_ = cnoid::Position::Identity();
+    cnoid::Isometry3 B_localpos_ = cnoid::Isometry3::Identity();
     double maxError_ = 0.05;
     cnoid::Vector3 maxRError_ = 0.05 * cnoid::Vector3::Ones();
     double precision_ = 1e-3;

@@ -115,8 +115,8 @@ namespace ik_constraint2_distance_field{
 
     // 別スレッドで上書きされてもいいようにコピー
     std::shared_ptr<distance_field::PropagationDistanceField> field = this->field_;
-    cnoid::Position fieldOrigin = this->fieldOrigin_;
-    Eigen::Affine3f fieldOriginInv = fieldOrigin.inverse().cast<float>();
+    cnoid::Isometry3 fieldOrigin = this->fieldOrigin_;
+    Eigen::Isometry3f fieldOriginInv = fieldOrigin.inverse().cast<float>();
 
     if(A_link && A_link != this->A_link_vertices_){
       this->A_vertices_ = getSurfaceVertices(A_link, this->resolution_);
@@ -126,7 +126,7 @@ namespace ik_constraint2_distance_field{
     // update ignore bounding box
     for(int i=0;i<this->ignoreBoundingBox_.size();i++) this->ignoreBoundingBox_[i].cacheParentLinkPose();
 
-    Eigen::Affine3f linkT = A_link->T().cast<float>();
+    Eigen::Isometry3f linkT = A_link->T().cast<float>();
 
     double min_dist = field->getUninitializedDistance() + 1; // getUninitializedDistance() returns max_distance
     cnoid::Vector3f closest_v = cnoid::Vector3f::Zero(); // link local

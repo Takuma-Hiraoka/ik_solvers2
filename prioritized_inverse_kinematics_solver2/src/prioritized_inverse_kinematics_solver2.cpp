@@ -196,9 +196,9 @@ namespace prioritized_inverse_kinematics_solver2 {
   class InitialJointState {
   public:
     InitialJointState() {}
-    InitialJointState(const cnoid::Position& T_): T(T_) {}
+    InitialJointState(const cnoid::Isometry3& T_): T(T_) {}
     InitialJointState(double q_): q(q_) {}
-    cnoid::Position T;
+    cnoid::Isometry3 T;
     double q;
   };
 
@@ -265,7 +265,7 @@ namespace prioritized_inverse_kinematics_solver2 {
     std::unordered_map<cnoid::LinkPtr, InitialJointState> initialJointStateMap;
     for(size_t i=0;i<variables.size();i++){
       if(variables[i]->isFreeJoint()) initialJointStateMap[variables[i]] = InitialJointState(variables[i]->T());
-      else if(variables[i]->isRotationalJoint() || variables[i]->isPrismaticJoint()) initialJointStateMap[variables[i]] = InitialJointState(variables[i]->q());
+      else if(variables[i]->isRevoluteJoint() || variables[i]->isPrismaticJoint()) initialJointStateMap[variables[i]] = InitialJointState(variables[i]->q());
       else initialJointStateMap[variables[i]] = InitialJointState();
     }
 
@@ -279,12 +279,12 @@ namespace prioritized_inverse_kinematics_solver2 {
     if(param.calcVelocity){
       for(size_t i=0;i<variables.size();i++){
         if(variables[i]->isFreeJoint()) {
-          cnoid::Position& initialT = initialJointStateMap[variables[i]].T;
+          cnoid::Isometry3& initialT = initialJointStateMap[variables[i]].T;
           variables[i]->v() = (variables[i]->p() - initialT.translation()) / param.dt;
           cnoid::AngleAxis angleAxis = cnoid::AngleAxis(variables[i]->R() * initialT.linear().transpose());
           variables[i]->w() = angleAxis.angle()*angleAxis.axis() / param.dt;
         }
-        else if(variables[i]->isRotationalJoint() || variables[i]->isPrismaticJoint()) {
+        else if(variables[i]->isRevoluteJoint() || variables[i]->isPrismaticJoint()) {
           double initialq = initialJointStateMap[variables[i]].q;
           variables[i]->dq() = (variables[i]->q() - initialq) / param.dt;
         }
@@ -305,12 +305,12 @@ namespace prioritized_inverse_kinematics_solver2 {
       if(param.calcVelocity){
         for(size_t i=0;i<variables.size();i++){
           if(variables[i]->isFreeJoint()) {
-            cnoid::Position& initialT = initialJointStateMap[variables[i]].T;
+            cnoid::Isometry3& initialT = initialJointStateMap[variables[i]].T;
             variables[i]->v() = (variables[i]->p() - initialT.translation()) / param.dt;
             cnoid::AngleAxis angleAxis = cnoid::AngleAxis(variables[i]->R() * initialT.linear().transpose());
             variables[i]->w() = angleAxis.angle()*angleAxis.axis() / param.dt;
           }
-          else if(variables[i]->isRotationalJoint() || variables[i]->isPrismaticJoint()) {
+          else if(variables[i]->isRevoluteJoint() || variables[i]->isPrismaticJoint()) {
             double initialq = initialJointStateMap[variables[i]].q;
             variables[i]->dq() = (variables[i]->q() - initialq) / param.dt;
           }

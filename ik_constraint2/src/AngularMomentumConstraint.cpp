@@ -1,145 +1,11 @@
 #include <ik_constraint2/AngularMomentumConstraint.h>
 #include <cnoid/Jacobian>
 
-namespace ik_constraint2 {
-  namespace cnoid18 {
-    // choreonoidのrelease1.7の calcAngularMomentumJacobianにはバグがあり、開発版ではhttps://github.com/s-nakaoka/choreonoid/pull/234 で修正されている. 修正された版の関数(https://github.com/choreonoid/choreonoid/blob/master/src/Body/Jacobian.cpp )を使う
-    cnoid::Matrix3d D(cnoid::Vector3d r)
-    {
-      cnoid::Matrix3d r_cross;
-      r_cross <<
-        0.0,  -r(2), r(1),
-        r(2),    0.0,  -r(0),
-        -r(1), r(0),    0.0;
-      return r_cross.transpose() * r_cross;
-    }
-
-    struct SubMass
-    {
-      double m;
-      cnoid::Vector3 mwc;
-      cnoid::Matrix3d Iw;
-      SubMass& operator+=(const SubMass& rhs){
-        m += rhs.m;
-        mwc += rhs.mwc;
-        Iw += rhs.Iw;
-        return *this;
-      }
-    };
-
-    void calcSubMass(cnoid::Link* link, std::vector<SubMass>& subMasses, bool calcIw)
-    {
-      cnoid::Matrix3d R = link->R();
-      SubMass& sub = subMasses[link->index()];
-      sub.m = link->m();
-      sub.mwc = link->m() * link->wc();
-
-      for(cnoid::Link* child = link->child(); child; child = child->sibling()){
-        calcSubMass(child, subMasses, calcIw);
-        SubMass& childSub = subMasses[child->index()];
-        sub.m += childSub.m;
-        sub.mwc += childSub.mwc;
-      }
-
-      if(calcIw){
-        if(sub.m != 0.0) sub.Iw = R * link->I() * R.transpose() + link->m() * D( link->wc() - sub.mwc/sub.m );
-        else sub.Iw = R * link->I() * R.transpose();
-        for(cnoid::Link* child = link->child(); child; child = child->sibling()){
-          SubMass& childSub = subMasses[child->index()];
-          if(sub.m != 0.0 && childSub.m != 0.0) sub.Iw += childSub.Iw + childSub.m * D( childSub.mwc/childSub.m - sub.mwc/sub.m );
-          else sub.Iw += childSub.Iw;
-        }
-      }
-    }
-    void calcAngularMomentumJacobian(cnoid::Body* body, cnoid::Link* base, Eigen::MatrixXd& H)
-    {
-
-      // prepare subm, submwc
-
-      const int nj = body->numJoints();
-      std::vector<SubMass> subMasses(body->numLinks());
-      cnoid::Link* rootLink = body->rootLink();
-      std::vector<int> sgn(nj, 1);
-
-      cnoid::MatrixXd M;
-      calcCMJacobian( body, base, M );
-      M.conservativeResize(3, nj);
-      M *= body->mass();
-
-      if(!base){
-        calcSubMass(rootLink, subMasses, true);
-        H.resize(3, nj + 6);
-
-      } else {
-        cnoid::JointPath path(rootLink, base);
-        cnoid::Link* skip = path.joint(0);
-        SubMass& sub = subMasses[skip->index()];
-        sub.m = rootLink->m();
-        sub.mwc = rootLink->m() * rootLink->wc();
-
-        for(cnoid::Link* child = rootLink->child(); child; child = child->sibling()){
-          if(child != skip){
-            calcSubMass(child, subMasses, true);
-            sub += subMasses[child->index()];
-          }
-        }
-
-        // assuming there is no branch between base and root
-        for(int i=1; i < path.numJoints(); i++){
-          cnoid::Link* joint = path.joint(i);
-          const cnoid::Link* parent = joint->parent();
-          SubMass& sub = subMasses[joint->index()];
-          sub.m = parent->m();
-          sub.mwc = parent->m() * parent->wc();
-          sub += subMasses[parent->index()];
-        }
-
-        H.resize(3, nj);
-
-        for(int i=0; i < path.numJoints(); i++){
-          sgn[path.joint(i)->jointId()] = -1;
-        }
-      }
-
-      // compute Jacobian
-      for(int i=0; i < nj; ++i){
-        cnoid::Link* joint = body->joint(i);
-        if(joint->isRotationalJoint()){
-          const cnoid::Vector3 omega = sgn[joint->jointId()] * joint->R() * joint->a();
-          const SubMass& sub = subMasses[joint->index()];
-          const cnoid::Vector3 Mcol = M.col(joint->jointId());
-          cnoid::Vector3 dp;
-          if(sub.m != 0.0) dp = (sub.mwc/sub.m).cross(Mcol) + sub.Iw * omega;
-          else dp = sub.Iw * omega;
-          H.col(joint->jointId()) = dp;
-        } else {
-          std::cerr << "calcAngularMomentumJacobian() : unsupported jointType("
-                    << joint->jointType() << std::endl;
-        }
-      }
-
-      if(!base){
-        const int c = nj;
-        H.block(0, c, 3, 3).setZero();
-        H.block(0, c+3, 3, 3) = subMasses[rootLink->index()].Iw;
-
-        cnoid::Vector3 cm = body->calcCenterOfMass();
-        cnoid::Matrix3d cm_cross;
-        cm_cross <<
-          0.0,  -cm(2), cm(1),
-          cm(2),    0.0,  -cm(0),
-          -cm(1), cm(0),    0.0;
-        H.block(0,0,3,c) -= cm_cross * M;
-      }
-    }
-  }
-}
-
 namespace ik_constraint2{
   void AngularMomentumConstraint::updateBounds () {
     if(this->robot_) {
       Eigen::MatrixXd AMJ;
-      cnoid18::calcAngularMomentumJacobian(this->robot_,nullptr,AMJ); // [joint root]の順. comまわり
+      cnoid::calcAngularMomentumJacobian(this->robot_,nullptr,AMJ); // [joint root]の順. comまわり
       cnoid::VectorX dq(this->robot_->numJoints()+6);
       for(int i=0;i<this->robot_->numJoints();i++) dq[i] = this->robot_->joint(i)->dq();
       dq.segment<3>(this->robot_->numJoints()) = this->robot_->rootLink()->v();
@@ -300,7 +166,7 @@ namespace ik_constraint2{
         int sign = (i==0) ? 1 : -1;
 
         Eigen::MatrixXd AMJ;
-        cnoid18::calcAngularMomentumJacobian(robot,nullptr,AMJ); // [joint root]の順. comまわり
+        cnoid::calcAngularMomentumJacobian(robot,nullptr,AMJ); // [joint root]の順. comまわり
 
         if(jacobianColMap.find(robot->rootLink()) != jacobianColMap.end()){
           int col_idx = jacobianColMap[robot->rootLink()];

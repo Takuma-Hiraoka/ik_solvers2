@@ -3,8 +3,8 @@
 
 namespace ik_constraint2{
   void JointLimitConstraint::updateBounds () {
-    if(!this->joint_ || !(this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint())) {
-      std::cerr << "[JointLimitConstraint::update] !this->joint_ || !(this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint())" << std::endl;
+    if(!this->joint_ || !(this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint())) {
+      std::cerr << "[JointLimitConstraint::update] !this->joint_ || !(this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint())" << std::endl;
       return;
     }
 
@@ -27,8 +27,8 @@ namespace ik_constraint2{
   }
 
   void JointLimitConstraint::updateJacobian (const std::vector<cnoid::LinkPtr>& joints) {
-    if(!this->joint_ || !(this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint())) {
-      std::cerr << "[JointLimitConstraint::update] !this->joint_ || !(this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint())" << std::endl;
+    if(!this->joint_ || !(this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint())) {
+      std::cerr << "[JointLimitConstraint::update] !this->joint_ || !(this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint())" << std::endl;
       return;
     }
 
@@ -47,7 +47,7 @@ namespace ik_constraint2{
       this->jacobianIneq_ = Eigen::SparseMatrix<double,Eigen::RowMajor>(1,cols);
 
       if(this->jacobianineqColMap_.find(this->jacobianineq_joint_) != this->jacobianineqColMap_.end()){
-        if(this->jacobianineq_joint_->isRotationalJoint() || this->jacobianineq_joint_->isPrismaticJoint()){
+        if(this->jacobianineq_joint_->isRevoluteJoint() || this->jacobianineq_joint_->isPrismaticJoint()){
           this->jacobianIneq_.insert(0,this->jacobianineqColMap_[this->jacobianineq_joint_]) = 1;
         }
       }
@@ -55,7 +55,7 @@ namespace ik_constraint2{
     }
 
     if(this->jacobianineqColMap_.find(this->jacobianineq_joint_) != this->jacobianineqColMap_.end()){
-      if(this->jacobianineq_joint_->isRotationalJoint() || this->jacobianineq_joint_->isPrismaticJoint()){
+      if(this->jacobianineq_joint_->isRevoluteJoint() || this->jacobianineq_joint_->isPrismaticJoint()){
         this->jacobianIneq_.coeffRef(0,this->jacobianineqColMap_[this->jacobianineq_joint_]) = this->weight_;
       }
     }

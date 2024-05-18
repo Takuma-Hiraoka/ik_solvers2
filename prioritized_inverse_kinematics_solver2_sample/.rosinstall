@@ -1,6 +1,7 @@
 - git:
-    local-name: choreonoid_viewer
-    uri: https://github.com/Naoki-Hiraoka/choreonoid_viewer.git
+    local-name: choreonoid_viewer2
+    uri: https://github.com/Naoki-Hiraoka/choreonoid_viewer2.git
+    version: 2.0
 
 # for collision check
 - git:
@@ -10,10 +11,12 @@
     local-name: qhulleigen
     uri: https://github.com/Naoki-Hiraoka/qhulleigen.git
 - git:
-    local-name: choreonoid_collision_tools
-    uri: https://github.com/Naoki-Hiraoka/choreonoid_collision_tools.git
+    local-name: choreonoid_collision_tools2
+    uri: https://github.com/Naoki-Hiraoka/choreonoid_collision_tools2.git
+    version: 2.0
 
 # for region cdd
 - git:
     local-name: cddeigen
     uri: https://github.com/Naoki-Hiraoka/cddeigen.git
+    version: 1.0

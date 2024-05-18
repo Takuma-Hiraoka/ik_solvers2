@@ -10,7 +10,7 @@ namespace ik_constraint2{
 
 
     // this->minIneq_, maxIneq_
-    if (this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint()) {
+    if (this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint()) {
       double lower = (this->joint_->dq_lower() - this->joint_->dq()) * dt_;
       double upper = (this->joint_->dq_upper() - this->joint_->dq()) * dt_;
 
@@ -68,7 +68,7 @@ namespace ik_constraint2{
       }
 
       int rows;
-      if (this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint()) rows=1;
+      if (this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint()) rows=1;
       else if (this->joint_->isFreeJoint()) rows = 6;
       else rows = 0;
 
@@ -84,7 +84,7 @@ namespace ik_constraint2{
 
     if(this->jacobianineqColMap_.find(this->jacobianineq_joint_) != this->jacobianineqColMap_.end()){
       int rows;
-      if (this->jacobianineq_joint_->isRotationalJoint() || this->jacobianineq_joint_->isPrismaticJoint()) rows=1;
+      if (this->jacobianineq_joint_->isRevoluteJoint() || this->jacobianineq_joint_->isPrismaticJoint()) rows=1;
       else if (this->jacobianineq_joint_->isFreeJoint()) rows = 6;
       else rows = 0;
 
@@ -119,7 +119,7 @@ namespace ik_constraint2{
 
   double JointVelocityConstraint::distance() const{
     if(!this->joint_) return 0.0;
-    if (this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint()) {
+    if (this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint()) {
       std::sqrt(std::pow(std::max(this->current_lower_,0.0), 2) + std::pow(std::min(this->current_upper_,0.0), 2))*this->weight_;
     }else if (this->joint_->isFreeJoint()){
       std::sqrt(this->current_lower6_.cwiseMax(Eigen::VectorXd::Zero(this->current_lower6_.size())).squaredNorm() + this->current_upper6_.cwiseMin(Eigen::VectorXd::Zero(this->current_upper6_.size())).squaredNorm())*this->weight_;

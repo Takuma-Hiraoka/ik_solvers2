@@ -18,12 +18,12 @@ namespace ik_constraint2{
     //状態が更新される度に, 手動でcalcForwardKinematics()を呼ぶ必要が有る.
     const cnoid::LinkPtr& A_link() const { return A_link_;}
     cnoid::LinkPtr& A_link() { return A_link_;}
-    const cnoid::Position& A_localpos() const { return A_localpos_;}
-    cnoid::Position& A_localpos() { return A_localpos_;}
+    const cnoid::Isometry3& A_localpos() const { return A_localpos_;}
+    cnoid::Isometry3& A_localpos() { return A_localpos_;}
     const cnoid::LinkPtr& B_link() const { return B_link_;}
     cnoid::LinkPtr& B_link() { return B_link_;}
-    const cnoid::Position& B_localpos() const { return B_localpos_;}
-    cnoid::Position& B_localpos() { return B_localpos_;}
+    const cnoid::Isometry3& B_localpos() const { return B_localpos_;}
+    cnoid::Isometry3& B_localpos() { return B_localpos_;}
     const cnoid::Vector6& maxError() const { return maxError_;}
     cnoid::Vector6& maxError() { return maxError_;}
     const double& precision() const { return precision_;}
@@ -52,9 +52,9 @@ namespace ik_constraint2{
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   private:
     cnoid::LinkPtr A_link_ = nullptr;
-    cnoid::Position A_localpos_ = cnoid::Position::Identity();
+    cnoid::Isometry3 A_localpos_ = cnoid::Isometry3::Identity();
     cnoid::LinkPtr B_link_ = nullptr;
-    cnoid::Position B_localpos_ = cnoid::Position::Identity();
+    cnoid::Isometry3 B_localpos_ = cnoid::Isometry3::Identity();
     cnoid::Vector6 maxError_ = (cnoid::Vector6()<<0.05,0.05,0.05,0.05,0.05,0.05).finished();
     double precision_ = 1e-3;
     cnoid::Vector6 weight_ = cnoid::Vector6::Ones();

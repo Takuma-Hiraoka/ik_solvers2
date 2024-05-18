@@ -6,7 +6,7 @@ namespace ik_constraint2_joint_limit_table{
     if(minIneq.rows() != 1) minIneq = Eigen::VectorXd::Zero(1);
     if(maxIneq.rows() != 1) maxIneq = Eigen::VectorXd::Zero(1);
 
-    if(!this->joint_ || !(this->joint_->isRotationalJoint() || this->joint_->isPrismaticJoint())) {
+    if(!this->joint_ || !(this->joint_->isRevoluteJoint() || this->joint_->isPrismaticJoint())) {
       return;
     }
 

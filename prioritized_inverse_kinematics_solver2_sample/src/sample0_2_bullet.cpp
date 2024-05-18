@@ -21,10 +21,8 @@ namespace prioritized_inverse_kinematics_solver2_sample{
       cnoid::SgPosTransformPtr posTransform = new cnoid::SgPosTransform();
       posTransform->translation() = cnoid::Vector3(0,0,0);
       posTransform->addChild(shape);
-      cnoid::SgGroupPtr group = new cnoid::SgGroup();
-      group->addChild(posTransform);
       cnoid::LinkPtr link = new cnoid::Link();
-      link->setShape(group);
+      link->addShapeNode(posTransform);
       bigBox->setRootLink(link);
     }
     cnoid::BodyPtr smallBox = new cnoid::Body();
@@ -37,10 +35,8 @@ namespace prioritized_inverse_kinematics_solver2_sample{
       cnoid::SgPosTransformPtr posTransform = new cnoid::SgPosTransform();
       posTransform->translation() = cnoid::Vector3(0,0,0);
       posTransform->addChild(shape);
-      cnoid::SgGroupPtr group = new cnoid::SgGroup();
-      group->addChild(posTransform);
       cnoid::LinkPtr link = new cnoid::Link();
-      link->setShape(group);
+      link->addShapeNode(posTransform);
       smallBox->setRootLink(link);
     }
 

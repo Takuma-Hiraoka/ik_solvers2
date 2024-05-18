@@ -10,7 +10,7 @@ namespace ik_constraint2_distance_field{
   public:
     class BoundingBox {
     public:
-      cnoid::Position localPose = cnoid::Position::Identity();
+      cnoid::Isometry3 localPose = cnoid::Isometry3::Identity();
       cnoid::LinkPtr parentLink;
       cnoid::Vector3 dimensions = cnoid::Vector3::Zero();
 
@@ -46,8 +46,8 @@ namespace ik_constraint2_distance_field{
     const double& resolution() const { return resolution_; }
     std::shared_ptr<distance_field::PropagationDistanceField>& field() {return this->field_; }
     const std::shared_ptr<distance_field::PropagationDistanceField>& field() const {return this->field_; }
-    cnoid::Position& fieldOrigin() { return this->fieldOrigin_; }
-    const cnoid::Position& fieldOrigin() const { return this->fieldOrigin_; }
+    cnoid::Isometry3& fieldOrigin() { return this->fieldOrigin_; }
+    const cnoid::Isometry3& fieldOrigin() const { return this->fieldOrigin_; }
     double& minDistance() { return minDistance_; }
     const double& minDistance() const { return minDistance_; }
     std::vector<BoundingBox >& ignoreBoundingBox() { return this->ignoreBoundingBox_; }
@@ -67,7 +67,7 @@ namespace ik_constraint2_distance_field{
 
     double resolution_ = 0.02;
     std::shared_ptr<distance_field::PropagationDistanceField> field_ = nullptr;
-    cnoid::Position fieldOrigin_ = cnoid::Position::Identity();
+    cnoid::Isometry3 fieldOrigin_ = cnoid::Isometry3::Identity();
     double minDistance_ = -0.02;
     std::vector<BoundingBox > ignoreBoundingBox_;
 

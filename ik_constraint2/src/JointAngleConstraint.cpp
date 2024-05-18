@@ -50,7 +50,7 @@ namespace ik_constraint2{
       this->jacobian_ = Eigen::SparseMatrix<double,Eigen::RowMajor>(1,cols);
 
       if(this->jacobianColMap_.find(this->jacobian_joint_) != this->jacobianColMap_.end()){
-        if(this->jacobian_joint_->isRotationalJoint() || this->jacobian_joint_->isPrismaticJoint()){
+        if(this->jacobian_joint_->isRevoluteJoint() || this->jacobian_joint_->isPrismaticJoint()){
           this->jacobian_.insert(0,this->jacobianColMap_[this->jacobian_joint_]) = 1;
         }
       }
@@ -58,7 +58,7 @@ namespace ik_constraint2{
     }
 
     if(this->jacobianColMap_.find(this->jacobian_joint_) != this->jacobianColMap_.end()){
-      if(this->jacobian_joint_->isRotationalJoint() || this->jacobian_joint_->isPrismaticJoint()){
+      if(this->jacobian_joint_->isRevoluteJoint() || this->jacobian_joint_->isPrismaticJoint()){
         this->jacobian_.coeffRef(0,this->jacobianColMap_[this->jacobian_joint_]) = this->weight_;
       }
     }

@@ -42,19 +42,15 @@ namespace prioritized_inverse_kinematics_solver2_sample{
     {
       cnoid::LinkPtr rootLink = new cnoid::Link();
       {
-        cnoid::SgGroupPtr group = new cnoid::SgGroup();
-        {
-          cnoid::SgShapePtr shape = new cnoid::SgShape();
-          shape->setMesh(meshGenerator.generateBox(cnoid::Vector3(4,4,0.1)));
-          cnoid::SgMaterialPtr material = new cnoid::SgMaterial();
-          material->setTransparency(0.5);
-          shape->setMaterial(material);
-          cnoid::SgPosTransformPtr posTransform = new cnoid::SgPosTransform();
-          posTransform->translation() = cnoid::Vector3(0,0,-0.05);
-          posTransform->addChild(shape);
-          group->addChild(posTransform);
-        }
-        rootLink->setShape(group);
+        cnoid::SgShapePtr shape = new cnoid::SgShape();
+        shape->setMesh(meshGenerator.generateBox(cnoid::Vector3(4,4,0.1)));
+        cnoid::SgMaterialPtr material = new cnoid::SgMaterial();
+        material->setTransparency(0.5);
+        shape->setMaterial(material);
+        cnoid::SgPosTransformPtr posTransform = new cnoid::SgPosTransform();
+        posTransform->translation() = cnoid::Vector3(0,0,-0.05);
+        posTransform->addChild(shape);
+        rootLink->addShapeNode(posTransform);
       }
       ground->setRootLink(rootLink);
     }

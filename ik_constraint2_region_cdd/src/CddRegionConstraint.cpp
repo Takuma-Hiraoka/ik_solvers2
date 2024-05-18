@@ -28,7 +28,7 @@ namespace ik_constraint2_region_cdd{
       this->points_->getOrCreateColors()->at(0) = cnoid::Vector3f(0.0,1.0,1.0);
     }
 
-    cnoid::Position B_pos = (this->B_link_) ? this->B_link_->T() * this->B_localpos_ : this->B_localpos_;
+    cnoid::Isometry3 B_pos = (this->B_link_) ? this->B_link_->T() * this->B_localpos_ : this->B_localpos_;
     B_pos.linear() = (this->eval_link_) ? this->eval_link_->R() * this->eval_localR_ : this->eval_localR_;
 
     const Eigen::Matrix<double, 3, Eigen::Dynamic> V_world = B_pos * this->V_;
