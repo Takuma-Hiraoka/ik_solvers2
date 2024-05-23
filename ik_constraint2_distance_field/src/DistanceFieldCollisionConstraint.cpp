@@ -114,7 +114,7 @@ namespace ik_constraint2_distance_field{
     }
 
     // 別スレッドで上書きされてもいいようにコピー
-    std::shared_ptr<distance_field::PropagationDistanceField> field = this->field_;
+    std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField> field = this->field_;
     cnoid::Isometry3 fieldOrigin = this->fieldOrigin_;
     Eigen::Isometry3f fieldOriginInv = fieldOrigin.inverse().cast<float>();
 
@@ -170,13 +170,13 @@ namespace ik_constraint2_distance_field{
       }
     }
 
-    if(min_dist_grad_invalid >= field->getUninitializedDistance()){
+    if(min_dist_grad_invalid >= field->getUninitializedDistance() - field->getResolution()/*epsilon*/){
       // 障害物と遠すぎて近傍点が計算できていない
       distance = min_dist_grad_invalid;
       direction = cnoid::Vector3::UnitX(); // てきとう
       A_v = closest_v_grad_invalid.cast<double>();
       B_v = (A_link->T() * A_v) - direction * distance;
-    }else if (min_dist >= field->getUninitializedDistance() ||
+    }else if (min_dist >= field->getUninitializedDistance()/*初期値*/ ||
               min_dist_grad_invalid < min_dist) {
       // 障害物と近すぎて近傍点が計算できていない
       // 干渉時は近傍点が正しくない場合があるので、干渉直前の値を使う

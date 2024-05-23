@@ -82,16 +82,16 @@ namespace prioritized_inverse_kinematics_solver2_sample{
     }
     {
       // task: env collision
-      std::shared_ptr<distance_field::PropagationDistanceField> field = std::make_shared<distance_field::PropagationDistanceField>(3,//size_x
-                                                                                                                                   3,//size_y
-                                                                                                                                   3,//size_z
-                                                                                                                                   0.02,//resolution
-                                                                                                                                   -1.5,//origin_x
-                                                                                                                                   -1.5,//origin_y
-                                                                                                                                   -1.5,//origin_z
-                                                                                                                                   0.5, // max_distance
-                                                                                                                                   false// propagate_negative_distances
-                                                                                                                                   );
+      std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField> field = std::make_shared<moveit_extensions::InterpolatedPropagationDistanceField>(3,//size_x
+                                                                                                                                                                 3,//size_y
+                                                                                                                                                                 3,//size_z
+                                                                                                                                                                 0.02,//resolution
+                                                                                                                                                                 -1.5,//origin_x
+                                                                                                                                                                 -1.5,//origin_y
+                                                                                                                                                                 -1.5,//origin_z
+                                                                                                                                                                 0.5, // max_distance
+                                                                                                                                                                 false// propagate_negative_distances
+                                                                                                                                                                 );
       EigenSTL::vector_Vector3d vertices;
       for(int i=0;i<desk->numLinks();i++){
         std::vector<Eigen::Vector3f> vertices_ = ik_constraint2_distance_field::getSurfaceVertices(desk->link(i), 0.02);
@@ -129,13 +129,6 @@ namespace prioritized_inverse_kinematics_solver2_sample{
       constraint->B_localpos().translation() = cnoid::Vector3(0.0,0.2,0.0);
       constraints1.push_back(constraint);
     }
-    {
-      // task: COM to target
-      std::shared_ptr<ik_constraint2::COMConstraint> constraint = std::make_shared<ik_constraint2::COMConstraint>();
-      constraint->A_robot() = robot;
-      constraint->B_localp() = cnoid::Vector3(0.0,0.0,0.6);
-      constraints1.push_back(constraint);
-    }
 
     std::vector<std::shared_ptr<ik_constraint2::IKConstraint> > constraints2;
     {
@@ -144,7 +137,7 @@ namespace prioritized_inverse_kinematics_solver2_sample{
       constraint->A_link() = robot->link("RARM_WRIST_R");
       constraint->A_localpos().translation() = cnoid::Vector3(0.0,0.0,-0.02);
       constraint->B_link() = nullptr;
-      constraint->B_localpos().translation() = cnoid::Vector3(1.0,-0.2,0.8);
+      constraint->B_localpos().translation() = cnoid::Vector3(1.2,-0.2,0.8);
       constraint->B_localpos().linear() = cnoid::Matrix3(cnoid::AngleAxis(-1.5,cnoid::Vector3(0,1,0)));
       constraints2.push_back(constraint);
     }

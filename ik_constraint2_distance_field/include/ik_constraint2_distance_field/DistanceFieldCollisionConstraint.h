@@ -2,7 +2,7 @@
 #define IK_CONSTRAINT2_DISTANCE_FIELD_DISTANCE_FIELDCOLLISIONCONSTRAINT_H
 
 #include <ik_constraint2/CollisionConstraint.h>
-#include <moveit/distance_field/propagation_distance_field.h>
+#include <moveit_extensions/moveit_extensions.h>
 
 namespace ik_constraint2_distance_field{
   // B_linkはnullptrでなければならない. A_linkとdistancefieldの干渉を評価する
@@ -44,8 +44,8 @@ namespace ik_constraint2_distance_field{
      */
     double& resolution() { return resolution_; }
     const double& resolution() const { return resolution_; }
-    std::shared_ptr<distance_field::PropagationDistanceField>& field() {return this->field_; }
-    const std::shared_ptr<distance_field::PropagationDistanceField>& field() const {return this->field_; }
+    std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField>& field() {return this->field_; }
+    const std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField>& field() const {return this->field_; }
     cnoid::Isometry3& fieldOrigin() { return this->fieldOrigin_; }
     const cnoid::Isometry3& fieldOrigin() const { return this->fieldOrigin_; }
     double& minDistance() { return minDistance_; }
@@ -66,7 +66,7 @@ namespace ik_constraint2_distance_field{
     virtual bool computeDistance(const cnoid::LinkPtr A_link, const cnoid::LinkPtr B_link, double& distance, cnoid::Vector3& direction/*B->A*/, cnoid::Vector3& A_v, cnoid::Vector3& B_v) override;
 
     double resolution_ = 0.02;
-    std::shared_ptr<distance_field::PropagationDistanceField> field_ = nullptr;
+    std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField> field_ = nullptr;
     cnoid::Isometry3 fieldOrigin_ = cnoid::Isometry3::Identity();
     double minDistance_ = -0.02;
     std::vector<BoundingBox > ignoreBoundingBox_;
