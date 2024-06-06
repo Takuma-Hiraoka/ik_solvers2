@@ -8,15 +8,19 @@ namespace ik_constraint2{
   class JointAngleConstraint : public IKConstraint
   {
   public:
-    //jointのqとtargetqを一致させる.
+    //A_joint->q + A_q と, B_joint->q + B_q を一致させる. nullptrなら足さずにA_q,B_qのみを用いる.
     //  maxError: エラーの頭打ち
     //  weight: コスト関数の重み. error * weight^2 * error.
     //  precision: 収束判定の閾値. error * weightのノルムと比べる
 
-    const cnoid::LinkPtr& joint() const { return joint_;}
-    cnoid::LinkPtr& joint() { return joint_;}
-    const double& targetq() const { return targetq_;}
-    double& targetq() { return targetq_;}
+    const cnoid::LinkPtr& A_joint() const { return A_joint_;}
+    cnoid::LinkPtr& A_joint() { return A_joint_;}
+    const double& A_q() const { return A_q_;}
+    double& A_q() { return A_q_;}
+    const cnoid::LinkPtr& B_joint() const { return B_joint_;}
+    cnoid::LinkPtr& B_joint() { return B_joint_;}
+    const double& B_q() const { return B_q_;}
+    double& B_q() { return B_q_;}
     const double& maxError() const { return maxError_;}
     double& maxError() { return maxError_;}
     const double& precision() const { return precision_;}
@@ -37,18 +41,28 @@ namespace ik_constraint2{
     void copy(std::shared_ptr<JointAngleConstraint> ret, const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const;
 
   private:
-    cnoid::LinkPtr joint_ = nullptr;
-    double targetq_ = 0.0;
+    cnoid::LinkPtr A_joint_ = nullptr;
+    double A_q_ = 0.0;
+    cnoid::LinkPtr B_joint_ = nullptr;
+    double B_q_ = 0.0;
     double precision_ = 1e-3;
     double maxError_ = 0.05;
     double weight_ = 1.0;
 
     double current_error_ = 0.0;
 
-    cnoid::LinkPtr jacobian_joint_ = nullptr; //前回jacobian_を計算した時のjoint
+    cnoid::LinkPtr jacobian_A_joint_ = nullptr; //前回jacobian_を計算した時のA_joint
+    cnoid::LinkPtr jacobian_B_joint_ = nullptr; //前回jacobian_を計算した時のB_joint
 
     std::vector<cnoid::LinkPtr> jacobian_joints_; // 前回のjacobian計算時のjoints
     std::unordered_map<cnoid::LinkPtr,int> jacobianColMap_;
+
+  public:
+    //deprecated
+    const cnoid::LinkPtr& joint() const { return A_joint_;}
+    cnoid::LinkPtr& joint() { return A_joint_;}
+    const double& targetq() const { return B_q_;}
+    double& targetq() { return B_q_;}
 
   };
 }

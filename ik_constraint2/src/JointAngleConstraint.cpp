@@ -3,14 +3,12 @@
 
 namespace ik_constraint2{
   void JointAngleConstraint::updateBounds () {
-    if(!this->joint_) {
-      std::cerr << "[JointAngleConstraint::update] !this->joint_" << std::endl;
-      return;
-    }
+    double A_q = (this->A_joint_) ? this->A_joint_->q() + this->A_q_: this->A_q_;
+    double B_q = (this->B_joint_) ? this->B_joint_->q() + this->B_q_: this->B_q_;
 
-    double error = this->targetq_ - this->joint_->q(); // target - joint
+    double error = B_q - A_q; // B - A
 
-    // this->eqの計算 target - joint
+    // this->eqの計算 A - B
     if(this->eq_.rows() != 1) this->eq_ = Eigen::VectorXd(1);
     this->eq_[0] = this->weight_ * std::min(std::max(error,-this->maxError_), this->maxError_);
 
@@ -18,28 +16,24 @@ namespace ik_constraint2{
     this->current_error_ = error;
 
     if(this->debugLevel_>=1){
-      std::cerr << "JointAngleConstraint" << std::endl;
-      std::cerr << "q" << std::endl;
-      std::cerr << this->joint_->q() << std::endl;
-      std::cerr << "targetq" << std::endl;
-      std::cerr << this->targetq_ << std::endl;
+      std::cerr << "JointAngleConstraint " << (this->A_joint_?this->A_joint_->name(): std::string("abs")) << " : " << (this->B_joint_?this->B_joint_->name(): std::string("abs")) << std::endl;
+      std::cerr << "A_q" << std::endl;
+      std::cerr << A_q << std::endl;
+      std::cerr << "B_q" << std::endl;
+      std::cerr << B_q << std::endl;
       std::cerr << "eq" << std::endl;
       std::cerr << this->eq_.transpose() << std::endl;
     }
-
   }
 
   void JointAngleConstraint::updateJacobian (const std::vector<cnoid::LinkPtr>& joints) {
-    if(!this->joint_) {
-      std::cerr << "[JointAngleConstraint::update] !this->joint_" << std::endl;
-      return;
-    }
-
     // this->jacobian_の計算
-    if(!IKConstraint::isJointsSame(joints,this->jacobian_joints_) ||
-       this->joint_ != this->jacobian_joint_){
+    if(!IKConstraint::isJointsSame(joints,this->jacobian_joints_)
+       || this->A_joint_ != this->jacobian_A_joint_
+       || this->B_joint_ != this->jacobian_B_joint_){
       this->jacobian_joints_ = joints;
-      this->jacobian_joint_ = this->joint_;
+      this->jacobian_A_joint_ = this->A_joint_;
+      this->jacobian_B_joint_ = this->B_joint_;
       this->jacobianColMap_.clear();
       int cols = 0;
       for(size_t i=0; i < this->jacobian_joints_.size(); i++){
@@ -49,17 +43,27 @@ namespace ik_constraint2{
 
       this->jacobian_ = Eigen::SparseMatrix<double,Eigen::RowMajor>(1,cols);
 
-      if(this->jacobianColMap_.find(this->jacobian_joint_) != this->jacobianColMap_.end()){
-        if(this->jacobian_joint_->isRevoluteJoint() || this->jacobian_joint_->isPrismaticJoint()){
-          this->jacobian_.insert(0,this->jacobianColMap_[this->jacobian_joint_]) = 1;
+      if(this->jacobianColMap_.find(this->jacobian_A_joint_) != this->jacobianColMap_.end()){
+        if(this->jacobian_A_joint_->isRevoluteJoint() || this->jacobian_A_joint_->isPrismaticJoint()){
+          this->jacobian_.insert(0,this->jacobianColMap_[this->jacobian_A_joint_]) = 1;
+        }
+      }
+      if(this->jacobianColMap_.find(this->jacobian_B_joint_) != this->jacobianColMap_.end()){
+        if(this->jacobian_B_joint_->isRevoluteJoint() || this->jacobian_B_joint_->isPrismaticJoint()){
+          this->jacobian_.insert(0,this->jacobianColMap_[this->jacobian_B_joint_]) = 1;
         }
       }
 
     }
 
-    if(this->jacobianColMap_.find(this->jacobian_joint_) != this->jacobianColMap_.end()){
-      if(this->jacobian_joint_->isRevoluteJoint() || this->jacobian_joint_->isPrismaticJoint()){
-        this->jacobian_.coeffRef(0,this->jacobianColMap_[this->jacobian_joint_]) = this->weight_;
+    if(this->jacobianColMap_.find(this->jacobian_A_joint_) != this->jacobianColMap_.end()){
+      if(this->jacobian_A_joint_->isRevoluteJoint() || this->jacobian_A_joint_->isPrismaticJoint()){
+        this->jacobian_.coeffRef(0,this->jacobianColMap_[this->jacobian_A_joint_]) = this->weight_;
+      }
+    }
+    if(this->jacobianColMap_.find(this->jacobian_B_joint_) != this->jacobianColMap_.end()){
+      if(this->jacobian_B_joint_->isRevoluteJoint() || this->jacobian_B_joint_->isPrismaticJoint()){
+        this->jacobian_.coeffRef(0,this->jacobianColMap_[this->jacobian_B_joint_]) = -this->weight_;
       }
     }
 
@@ -90,7 +94,8 @@ namespace ik_constraint2{
   }
 
   void JointAngleConstraint::copy(std::shared_ptr<JointAngleConstraint> ret, const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const {
-    if(this->joint_ && modelMap.find(this->joint_->body()) != modelMap.end()) ret->joint() = modelMap.find(this->joint_->body())->second->link(this->joint_->index());
+    if(this->A_joint_ && modelMap.find(this->A_joint_->body()) != modelMap.end()) ret->A_joint() = modelMap.find(this->A_joint_->body())->second->link(this->A_joint_->index());
+    if(this->B_joint_ && modelMap.find(this->B_joint_->body()) != modelMap.end()) ret->B_joint() = modelMap.find(this->B_joint_->body())->second->link(this->B_joint_->index());
   }
 
 }
