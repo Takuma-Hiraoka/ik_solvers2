@@ -6,14 +6,15 @@ set(CMAKE_BUILD_TYPE Release)
 
 find_package(catkin REQUIRED COMPONENTS
   ik_constraint2
-  moveit_extensions)
+  moveit_extensions
+  voxblox)
 
 find_package(choreonoid REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ik_constraint2_distance_field
-  CATKIN_DEPENDS ik_constraint2 moveit_extensions
+  CATKIN_DEPENDS ik_constraint2 moveit_extensions voxblox
   #  DEPENDS system_lib
   )
 
@@ -29,6 +30,7 @@ include_directories(
 
 add_library(${PROJECT_NAME}
   src/DistanceFieldCollisionConstraint.cpp
+  src/VoxbloxDistanceFieldCollisionConstraint.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

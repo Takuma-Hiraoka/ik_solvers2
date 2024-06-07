@@ -12,6 +12,7 @@
 
   <depend>moveit_extensions</depend>
   <depend>octomap_ros</depend>
+  <depend>voxblox</depend>
   <depend>choreonoid</depend>
   <depend>ik_constraint2</depend>
 
