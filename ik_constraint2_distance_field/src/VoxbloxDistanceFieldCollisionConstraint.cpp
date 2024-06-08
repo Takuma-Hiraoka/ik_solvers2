@@ -151,22 +151,23 @@ namespace ik_constraint2_voxblox_distance_field{
 
       cnoid::Vector3 grad;
       double dist;
-      bool in_bound; // Whether or not the (x,y,z) is valid for gradient purposes.
-      in_bound = field->getDistanceAndGradientAtPosition(v_fieldLocal, &dist, &grad);
-      if(dist < min_dist_grad_invalid) {
+      field->getDistanceAndGradientAtPosition(v_fieldLocal, &dist, &grad);
+      if (grad.norm() > 0) {
+        if(dist < min_dist_grad_invalid) {
           min_dist_grad_invalid = dist;
           closest_v_grad_invalid = this->A_vertices_[j];
-      }
-      if(in_bound && grad.norm() > 0 && dist >= this->minDistance_){
-        if(dist < min_dist){
-          closest_direction_fieldLocal[0] = (grad[0]/grad.norm());
-          closest_direction_fieldLocal[1] = (grad[1]/grad.norm());
-          closest_direction_fieldLocal[2] = (grad[2]/grad.norm());
-          closest_point_fieldLocal[0] = v_fieldLocal[0]-closest_direction_fieldLocal[0]*dist;
-          closest_point_fieldLocal[1] = v_fieldLocal[1]-closest_direction_fieldLocal[1]*dist;
-          closest_point_fieldLocal[2] = v_fieldLocal[2]-closest_direction_fieldLocal[2]*dist;
-          min_dist = dist;
-          closest_v = this->A_vertices_[j];
+        }
+        if(dist >= this->minDistance_){
+          if(dist < min_dist){
+            closest_direction_fieldLocal[0] = (grad[0]/grad.norm());
+            closest_direction_fieldLocal[1] = (grad[1]/grad.norm());
+            closest_direction_fieldLocal[2] = (grad[2]/grad.norm());
+            closest_point_fieldLocal[0] = v_fieldLocal[0]-closest_direction_fieldLocal[0]*dist;
+            closest_point_fieldLocal[1] = v_fieldLocal[1]-closest_direction_fieldLocal[1]*dist;
+            closest_point_fieldLocal[2] = v_fieldLocal[2]-closest_direction_fieldLocal[2]*dist;
+            min_dist = dist;
+            closest_v = this->A_vertices_[j];
+          }
         }
       }
     }
@@ -175,10 +176,9 @@ namespace ik_constraint2_voxblox_distance_field{
       // 障害物と遠すぎて近傍点が計算できていない
       distance = min_dist_grad_invalid;
       direction = cnoid::Vector3::UnitX(); // てきとう
-      A_v = closest_v_grad_invalid.cast<double>();
+      A_v = closest_v_grad_invalid;
       B_v = (A_link->T() * A_v) - direction * distance;
-    }else if (min_dist >= this->maxDistance_/*初期値*/ ||
-              min_dist_grad_invalid < min_dist) {
+    }else if (min_dist_grad_invalid < min_dist) {
       // 障害物と近すぎて近傍点が計算できていない
       // 干渉時は近傍点が正しくない場合があるので、干渉直前の値を使う
       direction = this->prev_direction_;
@@ -191,7 +191,7 @@ namespace ik_constraint2_voxblox_distance_field{
 
       distance = min_dist;
       direction = closest_direction;
-      A_v = closest_v.cast<double>();
+      A_v = closest_v;
       B_v = closest_point;
     }
 
