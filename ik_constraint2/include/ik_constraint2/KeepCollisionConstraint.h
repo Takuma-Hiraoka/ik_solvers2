@@ -30,6 +30,7 @@ namespace ik_constraint2{
     double& velocityDamper() { return velocityDamper_;}
     const double& ignorePenetration() const { return ignorePenetration_;}
     double& ignorePenetration() { return ignorePenetration_;}
+    const cnoid::Vector3& currentp() const { return currentp_;}
 
     // 内部状態更新. eq, minIneq, maxIneqを生成
     virtual void updateBounds () override;
