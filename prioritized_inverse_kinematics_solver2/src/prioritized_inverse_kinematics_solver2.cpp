@@ -31,7 +31,7 @@ namespace prioritized_inverse_kinematics_solver2 {
 
   inline bool checkConstraintsSatisfied(const std::vector<std::vector<std::shared_ptr<ik_constraint2::IKConstraint> > >& ikc_list, int checkLevel = std::numeric_limits<int>::max()) {
     bool satisfied = true;
-    for ( int i=0; i<ikc_list.size() && (checkLevel>=0 ? i<=checkLevel : true); i++ ) {
+    for ( int i=0; i<ikc_list.size() && (checkLevel>=0 ? i<=checkLevel : false); i++ ) {
       for(size_t j=0;j<ikc_list[i].size(); j++){
         if (!ikc_list[i][j]->isSatisfied()) satisfied = false;
       }
