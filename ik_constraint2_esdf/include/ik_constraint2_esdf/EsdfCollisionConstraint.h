@@ -15,8 +15,8 @@ namespace ik_constraint2_esdf{
       cnoid::LinkPtr parentLink;
       cnoid::Vector3 dimensions = cnoid::Vector3::Zero();
 
-      bool isInside(const cnoid::Vector3f& p) {
-        cnoid::Vector3f plocal = worldPoseinv * p;
+      bool isInside(const cnoid::Vector3& p) {
+        cnoid::Vector3 plocal = worldPoseinv * p;
         return
           (plocal[0] < dimensions[0]/2) &&
           (plocal[1] < dimensions[1]/2) &&
@@ -27,13 +27,13 @@ namespace ik_constraint2_esdf{
       }
       void cacheParentLinkPose(){
         if(parentLink){
-          worldPoseinv = (parentLink->T() * localPose).inverse().cast<float>();
+          worldPoseinv = (parentLink->T() * localPose).inverse();
         }else{
-          worldPoseinv = Eigen::Affine3f::Identity();
+          worldPoseinv = Eigen::Isometry3d::Identity();
         }
       }
     protected:
-      Eigen::Affine3f worldPoseinv;
+      Eigen::Isometry3d worldPoseinv;
     };
 
     /*
@@ -68,12 +68,11 @@ namespace ik_constraint2_esdf{
 
     double resolution_ = 0.02;
     std::shared_ptr<voxblox::EsdfMap> field_ = nullptr;
-    std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField> field2_ = nullptr;
     cnoid::Isometry3 fieldOrigin_ = cnoid::Isometry3::Identity();
     double minDistance_ = -0.02;
     std::vector<BoundingBox > ignoreBoundingBox_;
 
-    std::vector<cnoid::Vector3f> A_vertices_; // A_link_のvertices. link local
+    std::vector<cnoid::Vector3> A_vertices_; // A_link_のvertices. link local
     cnoid::LinkPtr A_link_vertices_; // A_vertices計算時のA_link_
 
     cnoid::Vector3 prev_A_localp_ = cnoid::Vector3::Zero();
@@ -86,7 +85,9 @@ namespace ik_constraint2_esdf{
   };
 
   // link local frame
-  std::vector<cnoid::Vector3f> getSurfaceVertices(cnoid::LinkPtr link, double resolution = 0.02);
+  std::vector<cnoid::Vector3> getSurfaceVertices(cnoid::LinkPtr link, float resolution = 0.02);
+
+  std::vector<std::pair<cnoid::Vector3, cnoid::Vector3> > getSurfaceVerticesAndNormals(cnoid::LinkPtr link, float resolution = 0.02, float minangle = M_PI/3);
 }
 
 #endif

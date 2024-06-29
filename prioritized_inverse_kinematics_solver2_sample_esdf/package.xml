@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>prioritized_inverse_kinematics_solver2_sample_esdf</name>
+  <version>0.0.0</version>
+  <description>The prioritized_inverse_kinematics_solver2_sample_esdf package</description>
+
+  <maintainer email="hiraoka@jsk.imi.i.u-tokyo.ac.jp">Naoki-Hiraoka</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>ik_constraint2</depend>
+  <depend>ik_constraint2_vclip</depend>
+  <depend>ik_constraint2_bullet</depend>
+  <depend>ik_constraint2_distance_field</depend>
+  <depend>ik_constraint2_region_cdd</depend>
+  <depend>choreonoid_cddlib</depend>
+  <depend>prioritized_inverse_kinematics_solver2</depend>
+  <depend>choreonoid_viewer</depend>
+
+  <depend>ik_constraint2_esdf</depend>
+</package>

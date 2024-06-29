@@ -15,7 +15,7 @@ find_package(choreonoid REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ik_constraint2_esdf
-  CATKIN_DEPENDS ik_constraint2 moveit_extensions
+  CATKIN_DEPENDS ik_constraint2 voxblox
   #  DEPENDS system_lib
   )
 
