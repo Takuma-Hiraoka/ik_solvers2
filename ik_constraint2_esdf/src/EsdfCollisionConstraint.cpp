@@ -1,66 +1,31 @@
-#include <ik_constraint2_distance_field/DistanceFieldCollisionConstraint.h>
+#include <ik_constraint2_esdf/EsdfCollisionConstraint.h>
 #include <iostream>
 #include <cnoid/SceneDrawables>
 #include <cnoid/MeshExtractor>
 
-extern "C" {
-#include <libqhull_r/qhull_ra.h>
-}
 
+namespace ik_constraint2_esdf{
 
-namespace ik_constraint2_distance_field{
-  inline void addMesh(cnoid::SgMeshPtr model, std::shared_ptr<cnoid::MeshExtractor> meshExtractor){
-    cnoid::SgMeshPtr mesh = meshExtractor->currentMesh();
-    const cnoid::Affine3& T = meshExtractor->currentTransform();
-
-    const int vertexIndexTop = model->getOrCreateVertices()->size();
-
-    const cnoid::SgVertexArray& vertices = *mesh->vertices();
-    const int numVertices = vertices.size();
-    for(int i=0; i < numVertices; ++i){
-      const cnoid::Vector3 v = T * vertices[i].cast<cnoid::Affine3::Scalar>();
-      model->vertices()->push_back(v.cast<cnoid::Vector3f::Scalar>());
-    }
-
-    const int numTriangles = mesh->numTriangles();
-    for(int i=0; i < numTriangles; ++i){
-      cnoid::SgMesh::TriangleRef tri = mesh->triangle(i);
-      const int v0 = vertexIndexTop + tri[0];
-      const int v1 = vertexIndexTop + tri[1];
-      const int v2 = vertexIndexTop + tri[2];
-      model->addTriangle(v0, v1, v2);
-    }
-  }
-
-  inline cnoid::SgMeshPtr convertToSgMesh (const cnoid::SgNodePtr collisionshape){
-    if (!collisionshape) return nullptr;
-
-    std::shared_ptr<cnoid::MeshExtractor> meshExtractor = std::make_shared<cnoid::MeshExtractor>();
-    cnoid::SgMeshPtr model = new cnoid::SgMesh;
-    if(meshExtractor->extract(collisionshape, [&]() { addMesh(model,meshExtractor); })){
-      model->setName(collisionshape->name());
-    }else{
-      std::cerr << "[convertToSgMesh] meshExtractor->extract failed " << collisionshape->name() << std::endl;
-      return nullptr;
-    }
-
-    return model;
-  }
-
-  std::vector<cnoid::Vector3f> getSurfaceVertices(cnoid::LinkPtr link, double resolution){
+  std::vector<cnoid::Vector3f> getSurfaceVertices(cnoid::LinkPtr link, float resolution){
     // 1つのvertexを取得したら、resolutionのサイズの同じ立方体の中にある他のvertexは取得しない
     // faceが巨大な場合、faceの内部の点をresolutionの間隔でサンプリングして取得する
 
+    cnoid::MeshExtractor meshExtractor;
+
     std::vector<cnoid::Vector3f> vertices;
-    cnoid::SgMeshPtr mesh = convertToSgMesh(link->collisionShape());
+    cnoid::SgMeshPtr mesh = meshExtractor.integrate(link->collisionShape());
     if(mesh && (mesh->numTriangles() != 0)) {
       mesh->updateBoundingBox();
       cnoid::BoundingBoxf bbx = mesh->boundingBox();
       cnoid::Vector3f bbxSize = bbx.max() - bbx.min();
-      std::vector<std::vector<std::vector<bool> > > bin(int(bbxSize[0]/resolution)+1,
-                                                        std::vector<std::vector<bool> >(int(bbxSize[1]/resolution)+1,
-                                                                                        std::vector<bool>(int(bbxSize[2]/resolution)+1,
-                                                                                                          false)));
+      std::vector<std::vector<std::vector<bool> > > bin;
+      bin.resize(int(bbxSize[0]/resolution)+1);
+      for(int x=0;x<bin.size();x++){
+        bin[x].resize(int(bbxSize[1]/resolution)+1);
+        for(int y=0;y<bin[x].size();y++){
+          bin[x][y].resize(int(bbxSize[2]/resolution)+1,false);
+        }
+      }
 
       for(int j=0;j<mesh->numTriangles();j++){
         cnoid::Vector3f v0 = mesh->vertices()->at(mesh->triangle(j)[0]);
@@ -68,53 +33,42 @@ namespace ik_constraint2_distance_field{
         cnoid::Vector3f v2 = mesh->vertices()->at(mesh->triangle(j)[2]);
         float l1 = (v1 - v0).norm();
         float l2 = (v2 - v0).norm();
-        cnoid::Vector3f n1 = (v1 - v0).normalized();
-        cnoid::Vector3f n2 = (v2 - v0).normalized();
-        for(double m=0;m<l1;m+=resolution){
-          for(double n=0;n<l2-(l2/l1*m);n+=resolution){
-            cnoid::Vector3f v = v0 + n1 * m + n2 * n;
-            int x = int((v[0] - bbx.min()[0])/resolution); x = std::max(0, std::min(int(bin.size()-1), x));
-            int y = int((v[1] - bbx.min()[1])/resolution); y = std::max(0, std::min(int(bin[0].size()-1), y));
-            int z = int((v[2] - bbx.min()[2])/resolution); z = std::max(0, std::min(int(bin[0][0].size()-1), z));
+        cnoid::Vector3f d1 = (v1 - v0).normalized();
+        cnoid::Vector3f d2 = (v2 - v0).normalized();
+
+        for(float m=0;;){
+          float n_max = (l1==0)? l2 : l2*(1-m/l1);
+          for(float n=0;;){
+            cnoid::Vector3f v = v0 + d1 * m + d2 * n;
+            int x = int((v[0] - bbx.min()[0])/resolution);
+            int y = int((v[1] - bbx.min()[1])/resolution);
+            int z = int((v[2] - bbx.min()[2])/resolution);
             if(!bin[x][y][z]){
               bin[x][y][z] = true;
               vertices.push_back(v);
             }
+
+            if(n>= n_max) break;
+            else n = std::min(n+resolution, n_max);
           }
-          double n=l2-l2/l1*m;
-          cnoid::Vector3f v = v0 + n1 * m + n2 * n;
-          int x = int((v[0] - bbx.min()[0])/resolution); x = std::max(0, std::min(int(bin.size()-1), x));
-          int y = int((v[1] - bbx.min()[1])/resolution); y = std::max(0, std::min(int(bin[0].size()-1), y));
-          int z = int((v[2] - bbx.min()[2])/resolution); z = std::max(0, std::min(int(bin[0][0].size()-1), z));
-          if(!bin[x][y][z]){
-            bin[x][y][z] = true;
-            vertices.push_back(v);
-          }
-        }
-        double m = l1;
-        double n= 0;
-        cnoid::Vector3f v = v0 + n1 * m + n2 * n;
-        int x = int((v[0] - bbx.min()[0])/resolution); x = std::max(0, std::min(int(bin.size()-1), x));
-        int y = int((v[1] - bbx.min()[1])/resolution); y = std::max(0, std::min(int(bin[0].size()-1), y));
-        int z = int((v[2] - bbx.min()[2])/resolution); z = std::max(0, std::min(int(bin[0][0].size()-1), z));
-        if(!bin[x][y][z]){
-          bin[x][y][z] = true;
-          vertices.push_back(v);
+
+          if(m>=l1) break;
+          else m = std::min(m+resolution, l1);
         }
       }
     }
     return vertices;
   }
 
-  bool DistanceFieldCollisionConstraint::computeDistance(const cnoid::LinkPtr A_link, const cnoid::LinkPtr B_link, double& distance, cnoid::Vector3& direction/*B->A*/, cnoid::Vector3& A_v, cnoid::Vector3& B_v) {
+  bool EsdfCollisionConstraint::computeDistance(const cnoid::LinkPtr A_link, const cnoid::LinkPtr B_link, double& distance, cnoid::Vector3& direction/*B->A*/, cnoid::Vector3& A_v, cnoid::Vector3& B_v) {
     if(A_link == nullptr ||
        B_link != nullptr ||
-       field_ == nullptr){
-      std::cerr << "[DistanceFieldCollisionConstraint::computeDistance] assertion failed" << std::endl;
+       field2_ == nullptr){
+      std::cerr << "[EsdfCollisionConstraint::computeDistance] assertion failed" << std::endl;
     }
 
     // 別スレッドで上書きされてもいいようにコピー
-    std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField> field = this->field_;
+    std::shared_ptr<moveit_extensions::InterpolatedPropagationDistanceField> field = this->field2_;
     cnoid::Isometry3 fieldOrigin = this->fieldOrigin_;
     Eigen::Isometry3f fieldOriginInv = fieldOrigin.inverse().cast<float>();
 
@@ -202,13 +156,13 @@ namespace ik_constraint2_distance_field{
     return true;
   }
 
-  std::shared_ptr<ik_constraint2::IKConstraint> DistanceFieldCollisionConstraint::clone(const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const {
-    std::shared_ptr<DistanceFieldCollisionConstraint> ret = std::make_shared<DistanceFieldCollisionConstraint>(*this);
+  std::shared_ptr<ik_constraint2::IKConstraint> EsdfCollisionConstraint::clone(const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const {
+    std::shared_ptr<EsdfCollisionConstraint> ret = std::make_shared<EsdfCollisionConstraint>(*this);
     this->copy(ret, modelMap);
     return ret;
   }
 
-  void DistanceFieldCollisionConstraint::copy(std::shared_ptr<DistanceFieldCollisionConstraint> ret, const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const {
+  void EsdfCollisionConstraint::copy(std::shared_ptr<EsdfCollisionConstraint> ret, const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const {
     CollisionConstraint::copy(ret, modelMap);
 
     //verticesは使いまわす
@@ -218,12 +172,5 @@ namespace ik_constraint2_distance_field{
     }
   }
 
-  // qhull_rを使わないけど無理やりリンクするため
-  void DistanceFieldCollisionConstraint::dummy() {
-    qhT qh_qh;
-    qhT* qh = &qh_qh;
-    QHULL_LIB_CHECK
-    qh_zero(qh, stderr);
-  }
 
 }
