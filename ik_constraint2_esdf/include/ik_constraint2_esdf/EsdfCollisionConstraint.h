@@ -41,6 +41,7 @@ namespace ik_constraint2_esdf{
       field: distance_field
       fieldOrgin: fieldの原点が、world系のどこにあるか.
       minDistance: fieldの裏側に勾配が向かうことを防ぐため、この距離以下の点は無視する
+      maxDistance: この距離以上の点はESDFに勾配が計算されていない. (esdf_integrator_config.max_distance_m)
       ignoreBoundingBox: この内部のlinkのvertexは無視する
      */
     double& resolution() { return resolution_; }
@@ -51,6 +52,8 @@ namespace ik_constraint2_esdf{
     const cnoid::Isometry3& fieldOrigin() const { return this->fieldOrigin_; }
     double& minDistance() { return minDistance_; }
     const double& minDistance() const { return minDistance_; }
+    double& maxDistance() { return maxDistance_; }
+    const double& maxDistance() const { return maxDistance_; }
     std::vector<BoundingBox >& ignoreBoundingBox() { return this->ignoreBoundingBox_; }
     const std::vector<BoundingBox >& ignoreBoundingBox() const { return this->ignoreBoundingBox_; }
 
@@ -70,6 +73,7 @@ namespace ik_constraint2_esdf{
     std::shared_ptr<voxblox::EsdfMap> field_ = nullptr;
     cnoid::Isometry3 fieldOrigin_ = cnoid::Isometry3::Identity();
     double minDistance_ = -0.02;
+    double maxDistance_ = 0.5;
     std::vector<BoundingBox > ignoreBoundingBox_;
 
     std::vector<cnoid::Vector3> A_vertices_; // A_link_のvertices. link local

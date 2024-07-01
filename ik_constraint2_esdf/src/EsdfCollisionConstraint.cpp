@@ -3,7 +3,6 @@
 #include <cnoid/SceneDrawables>
 #include <cnoid/MeshExtractor>
 #include <cnoid/MeshFilter>
-#include <limits>
 
 namespace ik_constraint2_esdf{
 
@@ -148,7 +147,7 @@ namespace ik_constraint2_esdf{
 
     Eigen::Isometry3d linkT = A_link->T();
 
-    double min_dist = std::numeric_limits<double>::max(); // minDistance以上離れていて、勾配が0でない点のうち、最近傍の距離.
+    double min_dist = this->maxDistance_; // minDistance以上離れていて、勾配が0でない点のうち、最近傍の距離.
     cnoid::Vector3 closest_v = cnoid::Vector3::Zero(); // link local
     cnoid::Vector3 closest_point_fieldLocal = cnoid::Vector3::Zero(); // field local
     cnoid::Vector3 closest_direction_fieldLocal = cnoid::Vector3::UnitX(); // field local. fieldからlinkへの方向
@@ -191,13 +190,13 @@ namespace ik_constraint2_esdf{
       }
     }
 
-    if(min_dist_grad_invalid >= std::numeric_limits<double>::max()/*初期値*/){
+    if(min_dist_grad_invalid >= this->maxDistance_/*初期値*/){
       // 障害物と遠すぎて近傍点が計算できていない
       distance = min_dist_grad_invalid;
       direction = cnoid::Vector3::UnitX(); // てきとう
       A_v = closest_v_grad_invalid;
       B_v = (A_link->T() * A_v) - direction * distance;
-    }else if (min_dist >= std::numeric_limits<double>::max()/*初期値*/ ||
+    }else if (min_dist >= this->maxDistance_/*初期値*/ ||
               min_dist_grad_invalid < min_dist) {
       // 障害物と近すぎて近傍点が計算できていない
       // 干渉時は近傍点が正しくない場合があるので、干渉直前の値を使う

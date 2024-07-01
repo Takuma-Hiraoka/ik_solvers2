@@ -39,6 +39,7 @@ namespace prioritized_inverse_kinematics_solver2_sample{
     robot->calcCenterOfMass();
 
     desk->rootLink()->p() = cnoid::Vector3(0.75,0.0,0.5);
+    desk->rootLink()->R() = cnoid::AngleAxisd(0.2,cnoid::Vector3::UnitX()).toRotationMatrix();
     desk->calcForwardKinematics();
     desk->calcCenterOfMass();
 
@@ -107,6 +108,15 @@ namespace prioritized_inverse_kinematics_solver2_sample{
         constraint->tolerance() = 0.03;
         constraints0.push_back(constraint);
       }
+
+      for(double z=0;z<2.0; z+=0.01){
+        cnoid::Vector3f v_fieldLocal(1.0,0.0,z);
+        cnoid::Vector3 grad;
+        bool in_bound;
+        double dist = field->getDistanceGradient(v_fieldLocal[0],v_fieldLocal[1],v_fieldLocal[2],grad[0],grad[1],grad[2],in_bound);
+        std::cerr << z << " "<< in_bound << " " << dist << " " << grad.transpose() << std::endl;
+      }
+
     }
 
 

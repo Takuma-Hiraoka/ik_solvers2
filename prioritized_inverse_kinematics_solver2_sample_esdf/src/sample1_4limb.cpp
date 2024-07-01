@@ -15,8 +15,12 @@
 #include <voxblox/integrator/tsdf_integrator.h>
 #include <voxblox/integrator/esdf_integrator.h>
 
+#include <cnoid/TimeMeasure>
+
 namespace prioritized_inverse_kinematics_solver2_sample_esdf{
   void sample1_4limb(){
+    cnoid::TimeMeasure timer; timer.begin();
+
     // load robot
     std::string modelfile = ros::package::getPath("choreonoid") + "/share/model/SR1/SR1.body";
     cnoid::BodyLoader bodyLoader;
@@ -43,6 +47,7 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
     robot->calcCenterOfMass();
 
     desk->rootLink()->p() = cnoid::Vector3(0.75,0.0,0.5);
+    desk->rootLink()->R() = cnoid::AngleAxisd(0.2, cnoid::Vector3::UnitX()).toRotationMatrix();
     desk->calcForwardKinematics();
     desk->calcCenterOfMass();
 
@@ -54,6 +59,8 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
       constraint->joint() = robot->joint(i);
       constraints0.push_back(constraint);
     }
+
+    std::cerr << "before sdf: " << timer.measure() << "[s]." << std::endl;
     {
       // task: env collision
 
@@ -61,35 +68,14 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
       tsdf_config.tsdf_voxel_size = 0.02;
       std::shared_ptr<voxblox::TsdfMap> tsdf_map = std::make_shared<voxblox::TsdfMap>(tsdf_config);
       voxblox::TsdfIntegratorBase::Config tsdf_integrator_config;
+      tsdf_integrator_config.voxel_carving_enabled = true;
       tsdf_integrator_config.default_truncation_distance = 0.02;
-      tsdf_integrator_config.max_weight = 10000.0;
+      tsdf_integrator_config.max_weight = 30.0;
       tsdf_integrator_config.min_ray_length_m = 0.01;
       std::shared_ptr<voxblox::FastTsdfIntegrator> tsdfIntegrator = std::make_shared<voxblox::FastTsdfIntegrator>(tsdf_integrator_config, tsdf_map->getTsdfLayerPtr());
+      //std::shared_ptr<voxblox::MergedTsdfIntegrator> tsdfIntegrator = std::make_shared<voxblox::MergedTsdfIntegrator>(tsdf_integrator_config, tsdf_map->getTsdfLayerPtr());
 
-      double ray = 0.1;
-      for(int i=0;i<desk->numLinks();i++){
-        std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > vertices = ik_constraint2_esdf::getSurfaceVerticesAndNormals(desk->link(i), 0.02, M_PI/3); // link local
-        for(int j=0;j<vertices.size();j++){
-          cnoid::Vector3 p = desk->link(i)->T() * vertices[j].first; // world frame
-          cnoid::Vector3 n = desk->link(i)->R() * vertices[j].second; // world frame
-
-          cnoid::Vector3 origin = p + n * ray; // カメラ原点. world frame
-          cnoid::Vector3 z = -n; // カメラ姿勢. world frame
-          cnoid::Vector3 x, y;
-          if(cnoid::Vector3::UnitY().cross(z).norm() > 0){
-            x = cnoid::Vector3::UnitY().cross(z);
-            y = z.cross(x);
-          }else{
-            y = z.cross(cnoid::Vector3::UnitX());
-            x = y.cross(z);
-          }
-          cnoid::Matrix3 R; R.col(0) = x; R.col(1) = y; R.col(2) = z; // カメラ姿勢. world frame
-          voxblox::Transformation trans(Eigen::Quaterniond(R).cast<float>(), origin.cast<float>());
-          voxblox::Pointcloud pcl{Eigen::Vector3f(0.0,0.0,ray)};
-          voxblox::Colors color{voxblox::Color(0.0,0.0,0.0)};
-          tsdfIntegrator->integratePointCloud(trans, pcl, color);
-        }
-      }
+      std::cerr << "after tsdf init: " << timer.measure() << "[s]." << std::endl;
 
       voxblox::EsdfMap::Config esdf_config;
       esdf_config.esdf_voxel_size = tsdf_config.tsdf_voxel_size;
@@ -99,14 +85,45 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
       esdf_integrator_config.max_distance_m = 0.5;
       esdf_integrator_config.default_distance_m = esdf_integrator_config.max_distance_m;
       esdf_integrator_config.clear_sphere_radius = 3.0;
+      //esdf_integrator_config.full_euclidean_distance = true;
       std::shared_ptr<voxblox::EsdfIntegrator> esdfIntegrator = std::make_shared<voxblox::EsdfIntegrator>(esdf_integrator_config, tsdf_map->getTsdfLayerPtr(), esdf_map->getEsdfLayerPtr());
       esdfIntegrator->addNewRobotPosition(voxblox::Point(0.0, 0.0, 0.0)); // clearする.
+
+      std::cerr << "after esdf init: " << timer.measure() << "[s]." << std::endl;
+
+      double ray = 0.1;
+      for(int i=0;i<desk->numLinks();i++){
+        std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > vertices = ik_constraint2_esdf::getSurfaceVerticesAndNormals(desk->link(i), 0.02, M_PI/3); // link local
+        for(int j=0;j<vertices.size();j++){
+          cnoid::Vector3 p = desk->link(i)->T() * vertices[j].first; // world frame
+          cnoid::Vector3 n = (desk->link(i)->R() * vertices[j].second).normalized(); // world frame
+
+          cnoid::Vector3 origin = p + n * ray; // カメラ原点. world frame
+          cnoid::Vector3 z = -n.normalized(); // カメラ姿勢. world frame
+          cnoid::Vector3 x, y;
+          if(cnoid::Vector3::UnitY().cross(z).norm() > 0){
+            x = cnoid::Vector3::UnitY().cross(z).normalized();
+            y = z.cross(x).normalized();
+          }else{
+            y = z.cross(cnoid::Vector3::UnitX()).normalized();
+            x = y.cross(z).normalized();
+          }
+          cnoid::Matrix3 R; R.col(0) = x; R.col(1) = y; R.col(2) = z; // カメラ姿勢. world frame
+          voxblox::Transformation trans(Eigen::Quaterniond(R).cast<float>(), origin.cast<float>());
+          voxblox::Pointcloud pcl{Eigen::Vector3f(0.0,0.0,ray)};
+          voxblox::Colors color{voxblox::Color(0.0,0.0,0.0)};
+          tsdfIntegrator->integratePointCloud(trans, pcl, color);
+        }
+      }
+      std::cerr << "after tsdf: " << timer.measure() << "[s]." << std::endl;
+
       esdfIntegrator->updateFromTsdfLayer(true);
+      std::cerr << "after esdf: " << timer.measure() << "[s]." << std::endl;
 
       for(double z=0;z<2.0; z+=0.01){
         cnoid::Vector3 grad;
         double dist;
-        bool success = esdf_map->getDistanceAndGradientAtPosition(cnoid::Vector3(1.0,0,z),&dist,&grad);
+        bool success = esdf_map->getDistanceAndGradientAtPosition(cnoid::Vector3(1.0,0,z)+cnoid::Vector3(1e-3,1e-3,1e-3),true,&dist,&grad);
         std::cerr << z << " "<< success << " " << dist << " " << grad.transpose() << std::endl;
       }
 
@@ -115,6 +132,7 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
         constraint->A_link() = robot->link(i);
         constraint->field() = esdf_map;
         constraint->tolerance() = 0.03;
+        constraint->maxDistance() = esdf_integrator_config.max_distance_m - 0.01;
         constraints0.push_back(constraint);
       }
     }
