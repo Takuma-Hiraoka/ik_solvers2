@@ -63,13 +63,14 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
     std::cerr << "before sdf: " << timer.measure() << "[s]." << std::endl;
     {
       // task: env collision
+      double voxel_size = 0.04;
 
       voxblox::TsdfMap::Config tsdf_config;
-      tsdf_config.tsdf_voxel_size = 0.02;
+      tsdf_config.tsdf_voxel_size = voxel_size;
       std::shared_ptr<voxblox::TsdfMap> tsdf_map = std::make_shared<voxblox::TsdfMap>(tsdf_config);
       voxblox::TsdfIntegratorBase::Config tsdf_integrator_config;
       tsdf_integrator_config.voxel_carving_enabled = true;
-      tsdf_integrator_config.default_truncation_distance = 0.02;
+      tsdf_integrator_config.default_truncation_distance = voxel_size;
       tsdf_integrator_config.max_weight = 30.0;
       tsdf_integrator_config.min_ray_length_m = 0.01;
       std::shared_ptr<voxblox::FastTsdfIntegrator> tsdfIntegrator = std::make_shared<voxblox::FastTsdfIntegrator>(tsdf_integrator_config, tsdf_map->getTsdfLayerPtr());
@@ -81,7 +82,7 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
       esdf_config.esdf_voxel_size = tsdf_config.tsdf_voxel_size;
       std::shared_ptr<voxblox::EsdfMap> esdf_map = std::make_shared<voxblox::EsdfMap>(esdf_config);
       voxblox::EsdfIntegrator::Config esdf_integrator_config;
-      esdf_integrator_config.min_distance_m = 0.02;
+      esdf_integrator_config.min_distance_m = voxel_size;
       esdf_integrator_config.max_distance_m = 0.5;
       esdf_integrator_config.default_distance_m = esdf_integrator_config.max_distance_m;
       esdf_integrator_config.clear_sphere_radius = 3.0;
@@ -93,7 +94,7 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
 
       double ray = 0.1;
       for(int i=0;i<desk->numLinks();i++){
-        std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > vertices = ik_constraint2_esdf::getSurfaceVerticesAndNormals(desk->link(i), 0.02, M_PI/3); // link local
+        std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > vertices = ik_constraint2_esdf::getSurfaceVerticesAndNormals(desk->link(i), voxel_size / 2 /*それなりの濃度でsampleしないとgradientが不正確*/, M_PI/3); // link local
         for(int j=0;j<vertices.size();j++){
           cnoid::Vector3 p = desk->link(i)->T() * vertices[j].first; // world frame
           cnoid::Vector3 n = (desk->link(i)->R() * vertices[j].second).normalized(); // world frame
@@ -123,8 +124,16 @@ namespace prioritized_inverse_kinematics_solver2_sample_esdf{
       for(double z=0;z<2.0; z+=0.01){
         cnoid::Vector3 grad;
         double dist;
-        bool success = esdf_map->getDistanceAndGradientAtPosition(cnoid::Vector3(1.0,0,z)+cnoid::Vector3(1e-3,1e-3,1e-3),true,&dist,&grad);
+        bool success = esdf_map->getDistanceAndGradientAtPosition(cnoid::Vector3(1.0,0,z),true,&dist,&grad);
         std::cerr << z << " "<< success << " " << dist << " " << grad.transpose() << std::endl;
+
+        // for(double y=-voxel_size*3;y<=voxel_size*3;y+=voxel_size){
+        //   cnoid::Vector3 grad;
+        //   double dist;
+        //   bool success = esdf_map->getDistanceAndGradientAtPosition(cnoid::Vector3(1.0,y,z),true,&dist,&grad);
+        //   std::cerr << dist << " ";
+        // }
+        // std::cerr << std::endl;
       }
 
       for(int i=0;i<robot->numLinks();i++){
