@@ -2,7 +2,6 @@
 #define IK_CONSTRAINT2_ESDF_ESDFCOLLISIONCONSTRAINT_H
 
 #include <ik_constraint2/CollisionConstraint.h>
-#include <moveit_extensions/moveit_extensions.h>
 #include <voxblox/core/esdf_map.h>
 
 namespace ik_constraint2_esdf{

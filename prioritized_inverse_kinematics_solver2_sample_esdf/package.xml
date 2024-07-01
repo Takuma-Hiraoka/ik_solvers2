@@ -10,13 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>ik_constraint2</depend>
-  <depend>ik_constraint2_vclip</depend>
-  <depend>ik_constraint2_bullet</depend>
-  <depend>ik_constraint2_distance_field</depend>
-  <depend>ik_constraint2_region_cdd</depend>
-  <depend>choreonoid_cddlib</depend>
   <depend>prioritized_inverse_kinematics_solver2</depend>
   <depend>choreonoid_viewer</depend>
-
   <depend>ik_constraint2_esdf</depend>
 </package>

@@ -6,12 +6,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 find_package(catkin REQUIRED COMPONENTS
   ik_constraint2
-  ik_constraint2_vclip
-  ik_constraint2_bullet
-  ik_constraint2_distance_field
-  ik_constraint2_region_cdd
   ik_constraint2_esdf
-  choreonoid_cddlib
   prioritized_inverse_kinematics_solver2
   roslib
   choreonoid_viewer
@@ -26,31 +21,11 @@ include_directories(
  ${CHOREONOID_INCLUDE_DIRS}
 )
 
-add_executable(SampleSR1
-  src/SampleSR1.cpp
-)
-
-target_link_libraries(SampleSR1
-  ${catkin_LIBRARIES}
-  ${CHOREONOID_BODY_LIBRARIES}
-  )
-
-install(TARGETS SampleSR1
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
-
 
 
 add_library(CnoidPrioritizedInverseKinematicsSolver2SampleEsdfPlugin SHARED
   src/CnoidPrioritizedInverseKinematicsSolver2SampleEsdfPlugin.cpp
-  src/sample0_1_bullet.cpp
-  src/sample0_2_bullet.cpp
   src/sample1_4limb.cpp
-  src/sample2_collision.cpp
-  src/sample3_collision.cpp
-  src/sample4_region.cpp
-  src/sample5_or.cpp
-  src/sample6_keep.cpp
 )
 target_link_libraries(CnoidPrioritizedInverseKinematicsSolver2SampleEsdfPlugin
   ${catkin_LIBRARIES}
