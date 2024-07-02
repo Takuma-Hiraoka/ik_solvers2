@@ -76,7 +76,7 @@ namespace ik_constraint2{
 
       if(this->jacobianineqColMap_.find(this->jacobianineq_joint_) != this->jacobianineqColMap_.end()){
         for(size_t i=0;i<rows;i++){
-          this->jacobianIneq_.insert(rows,this->jacobianineqColMap_[this->jacobianineq_joint_]+i) = 1;
+          this->jacobianIneq_.insert(i,this->jacobianineqColMap_[this->jacobianineq_joint_]+i) = 1;
         }
       }
 
