@@ -35,6 +35,9 @@ namespace ik_constraint2{
     double& ignoreDistance() { return ignoreDistance_;}
     bool& invert() { return invert_; }
     const bool& invert() const { return invert_; }
+    const cnoid::Vector3& A_currentLocalp() const { return A_currentLocalp_;}
+    const cnoid::Vector3& B_currentLocalp() const { return B_currentLocalp_;}
+    const cnoid::Vector3& currentDirection() const { return currentDirection_;}
 
     // 内部状態更新. eq, minIneq, maxIneqを生成
     virtual void updateBounds () override;
