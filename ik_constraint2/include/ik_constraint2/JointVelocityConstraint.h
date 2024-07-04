@@ -38,7 +38,7 @@ namespace ik_constraint2{
     virtual std::shared_ptr<IKConstraint> clone(const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const override;
     void copy(std::shared_ptr<JointVelocityConstraint> ret, const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const;
 
-  private:
+  protected:
     cnoid::LinkPtr joint_ = nullptr;
     double dt_ = 0.1;
     double precision_ = 1e-3;
