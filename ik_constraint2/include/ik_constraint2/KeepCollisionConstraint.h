@@ -62,7 +62,6 @@ namespace ik_constraint2{
                                     Eigen::VectorXd& B_du
                                     )=0;
 
-  private:
     cnoid::LinkPtr A_link_ = nullptr;
     cnoid::LinkPtr B_link_ = nullptr;
     double tolerance_ = 0.0;

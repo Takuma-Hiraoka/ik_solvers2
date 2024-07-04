@@ -50,7 +50,7 @@ namespace ik_constraint2{
     void copy(std::shared_ptr<PositionConstraint> ret, const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  private:
+  protected:
     cnoid::LinkPtr A_link_ = nullptr;
     cnoid::Isometry3 A_localpos_ = cnoid::Isometry3::Identity();
     cnoid::LinkPtr B_link_ = nullptr;

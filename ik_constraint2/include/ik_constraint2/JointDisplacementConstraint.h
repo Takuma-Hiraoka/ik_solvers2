@@ -32,7 +32,7 @@ namespace ik_constraint2{
     virtual std::shared_ptr<IKConstraint> clone(const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const override;
     void copy(std::shared_ptr<JointDisplacementConstraint> ret, const std::map<cnoid::BodyPtr, cnoid::BodyPtr>& modelMap) const;
 
-  private:
+  protected:
     cnoid::LinkPtr joint_ = nullptr;
     double limit_ = 0.1;
     double weight_ = 1.0;
