@@ -12,5 +12,6 @@
   <depend>ik_constraint2</depend>
   <depend>prioritized_qp_osqp</depend>
   <depend>choreonoid</depend>
+  <depend>choreonoid_viewer</depend>
 
 </package>

@@ -5,6 +5,7 @@
 #include <ik_constraint2/IKConstraint.h>
 #include <prioritized_qp_base/PrioritizedQPBaseSolver.h>
 #include <prioritized_qp_osqp/prioritized_qp_osqp.h>
+#include <choreonoid_viewer/choreonoid_viewer.h>
 
 namespace prioritized_inverse_kinematics_solver2 {
   /*
@@ -37,7 +38,7 @@ namespace prioritized_inverse_kinematics_solver2 {
     std::vector<double> weVec; // weVec.size() == ikc_list.size()の場合、weの代わりにこっちを使う
     double wmax = 1e-1;
     std::vector<double> wmaxVec; // wmaxVec.size() == ikc_list.size()の場合、wmaxの代わりにこっちを使う
-    int debugLevel = 0; // 0: no debug message. 1: time measure. 2: internal state
+    int debugLevel = 0; // 0: no debug message. 1: time measure. 2: internal state. 3: debug view
 
     double dt = 0.1;
     bool calcVelocity = true; // dtを用いて速度の計算をするかどうか. 速度を利用するconstraintがあるなら必須. ないなら、falseにすると高速化が見込まれる
@@ -45,6 +46,8 @@ namespace prioritized_inverse_kinematics_solver2 {
     double convergeThre = 5e-3; // 各イテレーションでの変位のノルムがconvergeThre未満の場合に、maxIterationに行っていなくても, minIteraionに行っていなくても、isSatisfiedでなくても、終了する
     int satisfiedConvergeLevel = -1; // convergeThreを満たしても、ikclistのsatisfiedConvergeLevel番目の要素までがisSatisfiedでなければ終了しない.
     size_t pathOutputLoop = 1; // このloop回数に一回、途中経過のpathを出力する. 1以上
+    std::shared_ptr<choreonoid_viewer::Viewer> viewer = nullptr;
+    int viewMilliseconds = 0; // 表示のためviewMillisecondsミリ秒だけ待つ. 負ならget_char().
 
   };
   bool solveIKLoop (const std::vector<cnoid::LinkPtr>& variables,
