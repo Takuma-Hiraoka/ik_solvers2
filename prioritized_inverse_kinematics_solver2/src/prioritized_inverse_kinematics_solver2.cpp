@@ -189,6 +189,22 @@ namespace prioritized_inverse_kinematics_solver2 {
       double time = timer.measure();
       std::cerr << "[PrioritizedIK] solveIKOnce time: " << time << "[s]. norm: " << result.norm() << std::endl;
     }
+    if(param.debugLevel>2 && param.viewer) {
+      std::vector<cnoid::SgNodePtr> markers;
+      for(int i=0;i<ikc_list.size();i++){
+        for(int j=0;j<ikc_list[i].size();j++){
+          const std::vector<cnoid::SgNodePtr>& marker = ikc_list[i][j]->getDrawOnObjects();
+          std::copy(marker.begin(), marker.end(), std::back_inserter(markers));
+        }
+      }
+      param.viewer->drawOn(markers);
+      param.viewer->drawObjects();
+      if (param.viewMilliseconds>=0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(param.viewMilliseconds));
+      } else {
+        getchar();
+      }
+    }
 
     return result.norm() < param.convergeThre;
   }
